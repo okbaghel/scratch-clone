@@ -22,3 +22,6 @@ A web based application where user can drag block to each sprites to perform the
 cd scratch
 npm i
 npm run dev
+
+Project deployment link : https://scratchapp-clone.vercel.app/
+Project vedio link : https://www.loom.com/share/83591977a4a34bdc8be7ead796ecbd62?sid=c3ca651c-354d-4c74-aed9-98316fb208cc
