@@ -41,7 +41,7 @@ const Stage = ({
         const prevPos = { ...pos };
 
         switch (block.type) {
-          case "move":
+          case "move": {
             const steps = parseInt(block.value || 10);
             const angleRad = (pos.angle * Math.PI) / 180;
             const dx = Math.round(Math.cos(angleRad) * steps);
@@ -58,17 +58,17 @@ const Stage = ({
               pos.y = nextY;
             }
             break;
-
-          case "goto":
+          }
+          case "goto": {
             pos.x = parseInt(block.value?.x || 0);
             pos.y = parseInt(block.value?.y || 0);
             break;
-
-          case "turn":
+          }
+          case "turn": {
             pos.angle = (pos.angle + parseInt(block.value || 15)) % 360;
             break;
-
-          case "bounce":
+          }
+          case "bounce": {
             const bounceSteps = parseInt(block.value || 10);
             const bounceRad = (pos.angle * Math.PI) / 180;
             pos.x += Math.round(Math.cos(bounceRad) * bounceSteps);
@@ -78,22 +78,25 @@ const Stage = ({
             pos.x -= Math.round(Math.cos(bounceRad) * bounceSteps);
             pos.y -= Math.round(Math.sin(bounceRad) * bounceSteps);
             break;
-
+          }
           case "say":
-          case "think":
+          case "think": {
             const { message = "Hello", duration = 2 } = block.value || {};
             pos.bubble = { text: message, type: block.type };
             setPosition({ ...pos });
             await delay(duration * 1000);
             pos.bubble = null;
             break;
-
-          case "repeat":
+          }
+          case "repeat": {
             const times = parseInt(block.value || 1);
             const subBlocks = block.subBlocks || [];
             for (let i = 0; i < times; i++) {
               await executeBlocks(subBlocks);
             }
+            break;
+          }
+          default:
             break;
         }
 
@@ -158,11 +161,7 @@ const Stage = ({
             ? "bg-blue-500 text-white"
             : "bg-gray-200 text-gray-800"
         }`}
-        style={{
-          left: x + 50,
-          top: y - 10,
-          whiteSpace: "nowrap",
-        }}
+        style={{ left: x + 50, top: y - 10, whiteSpace: "nowrap" }}
       >
         {bubble.text}
         <div
@@ -174,10 +173,10 @@ const Stage = ({
     );
   };
 
-  const handleDrag = (e, setPosition) => {
+  const updatePosition = (clientX, clientY, setPosition) => {
     const stageRect = stageRef.current.getBoundingClientRect();
-    const newX = e.clientX - stageRect.left - SPRITE_SIZE / 2;
-    const newY = e.clientY - stageRect.top - SPRITE_SIZE / 2;
+    const newX = clientX - stageRect.left - SPRITE_SIZE / 2;
+    const newY = clientY - stageRect.top - SPRITE_SIZE / 2;
     if (
       newX >= 0 &&
       newY >= 0 &&
@@ -203,15 +202,7 @@ const Stage = ({
 
       <div
         ref={stageRef}
-        className="relative w-full h-80 bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-xl border-2 border-purple-200 overflow-hidden shadow-inner"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(255, 182, 193, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(173, 216, 230, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(255, 255, 224, 0.1) 0%, transparent 50%)
-          `,
-        }}
-      >
+        className="relative w-full h-80 bg-gradient-to-br from-yellow-50 via-pink-50 to-blue-50 rounded-xl border-2 border-purple-200 overflow-hidden shadow-inner">
         {/* Monkey */}
         <img
           src="/monkey.png"
@@ -223,7 +214,16 @@ const Stage = ({
             transform: `translate(${obj1Pos.x}px, ${obj1Pos.y}px) rotate(${obj1Pos.angle}deg)`,
           }}
           draggable
-          onDrag={(e) => handleDrag(e, setObj1Pos)}
+          onDrag={(e) => updatePosition(e.clientX, e.clientY, setObj1Pos)}
+          onTouchMove={(e) => {
+            if (e.touches.length > 0) {
+              updatePosition(
+                e.touches[0].clientX,
+                e.touches[0].clientY,
+                setObj1Pos
+              );
+            }
+          }}
         />
         {renderBubble(obj1Pos.bubble, obj1Pos.x, obj1Pos.y)}
 
@@ -238,15 +238,21 @@ const Stage = ({
             transform: `translate(${obj2Pos.x}px, ${obj2Pos.y}px) rotate(${obj2Pos.angle}deg)`,
           }}
           draggable
-          onDrag={(e) => handleDrag(e, setObj2Pos)}
+          onDrag={(e) => updatePosition(e.clientX, e.clientY, setObj2Pos)}
+          onTouchMove={(e) => {
+            if (e.touches.length > 0) {
+              updatePosition(
+                e.touches[0].clientX,
+                e.touches[0].clientY,
+                setObj2Pos
+              );
+            }
+          }}
         />
-        {renderBubble(obj2Pos.bubble, obj2Pos.x, obj2Pos.y)}
-
-        {/* Collision Effect */}
-        {heroHit && (
+        {renderBubble(obj2Pos.bubble, obj2Pos.x, obj2Pos.y)}{heroHit && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="bg-red-500 text-white font-bold text-2xl px-4 py-2 rounded-lg shadow-lg animate-bounce">
-               BOOM!
+              BOOM!
             </div>
           </div>
         )}
